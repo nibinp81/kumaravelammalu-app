@@ -1,0 +1,35 @@
+workflows:
+  ios-release:
+    name: iOS IPA Build
+    max_build_duration: 60
+    environment:
+      flutter: 3.41.9
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Get Flutter packages
+        script: flutter pub get
+      - name: Build unsigned IPA
+        script: |
+          flutter build ios --release --no-codesign
+          cd ios
+          xcodebuild -workspace Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -sdk iphoneos \
+            -archivePath Runner.xcarchive \
+            archive CODE_SIGNING_ALLOWED=NO
+          xcodebuild -exportArchive \
+            -archivePath Runner.xcarchive \
+            -exportPath ../output \
+            -exportOptionsPlist ExportOptions.plist
+    artifacts:
+      - output/*.ipa
+      - flutter_drive.log
+    publishing:
+      email:
+        recipients:
+          - nibinp81@gmail.com
+        notify:
+          success: true
+          failure: true
